@@ -1,0 +1,6 @@
+FROM golang:1.23
+RUN apt update && apt install -y libwebp-dev build-essential
+WORKDIR /app
+COPY . .
+ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64 GIN_MODE=release
+RUN go build -ldflags "-X main.GinMode=release" -o imageresizer ./cmd/server
