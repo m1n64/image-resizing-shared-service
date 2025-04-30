@@ -41,6 +41,7 @@ You can run it in the background or as a system service.
 - **Gin** — HTTP web framework
 - **gRPC** — transport layer for image handling
 - **GORM** — ORM with SQLite backend (file-based)
+- **SQLite in WAL mode** - file-based database in WAL mode for performance
 - **imaging/chai2010/webp** — image processing and compression
 - **Makefile** — CLI tasks and automation
 
@@ -270,6 +271,7 @@ This approach allows local apps to delegate all image handling (resize, compress
 ## ✨ Planned Features
 
 - Dockerized version of the binary on Docker Hub
+- Change SQLite in WAL mode to a faster embedded database (libSQL or similar)
 - Embedded file-layer abstraction (MinIO-like behavior without exposing FS)
 - Optional encryption or obfuscation for stored image files
 - Optional signed URLs with expiration
