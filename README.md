@@ -325,6 +325,12 @@ This setup:
 
 ---
 
+## 🧩 Available SDK
+
+- [PHP](https://github.com/m1n64/image-resizer-sdk) - A Lightweight PHP SDK for the Image Resizer Service
+
+---
+
 ## 📌 Notes
 
 - The service is designed to be embedded in desktop or backend applications.
