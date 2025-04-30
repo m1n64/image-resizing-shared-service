@@ -11,6 +11,7 @@ import (
 	"image"
 	"image-resizing-shared/internal/domain"
 	"image-resizing-shared/internal/ports"
+	"image-resizing-shared/pkg/config"
 	"image-resizing-shared/pkg/utils"
 	"path/filepath"
 )
@@ -20,6 +21,7 @@ type ResizeService struct {
 	thumbnailRepository ports.ThumbnailRepository
 	imageRepository     ports.ImageRepository
 	storageRoot         string
+	compressionSettings *config.CompressionSettings
 }
 
 func NewResizeService(
@@ -27,12 +29,14 @@ func NewResizeService(
 	thumbnailRepo ports.ThumbnailRepository,
 	imageRepo ports.ImageRepository,
 	storageRoot string,
+	compressionSettings *config.CompressionSettings,
 ) ports.ResizeUseCase {
 	return &ResizeService{
 		db:                  db,
 		thumbnailRepository: thumbnailRepo,
 		imageRepository:     imageRepo,
 		storageRoot:         storageRoot,
+		compressionSettings: compressionSettings,
 	}
 }
 
@@ -48,7 +52,7 @@ func (s *ResizeService) ResizeThumbnails(ctx context.Context, imageID uuid.UUID,
 	}
 
 	for _, size := range domain.ThumbnailSizes {
-		if err := s.generateAndSaveThumbnail(ctx, imageID, img, size); err != nil {
+		if err := s.generateAndSaveThumbnail(ctx, imageID, img, size, s.compressionSettings.Quality); err != nil {
 			return fmt.Errorf("failed to process thumbnail %s: %w", size.Label, err)
 		}
 	}
@@ -67,11 +71,11 @@ func (s *ResizeService) ResizeThumbnails(ctx context.Context, imageID uuid.UUID,
 	return nil
 }
 
-func (s *ResizeService) generateAndSaveThumbnail(ctx context.Context, imageID uuid.UUID, img image.Image, size domain.ThumbnailSize) error {
+func (s *ResizeService) generateAndSaveThumbnail(ctx context.Context, imageID uuid.UUID, img image.Image, size domain.ThumbnailSize, quality float32) error {
 	thumb := imaging.Resize(img, size.Width, size.Height, imaging.Lanczos)
 
 	var buf bytes.Buffer
-	options := &webp.Options{Quality: 80}
+	options := &webp.Options{Quality: quality}
 	if err := webp.Encode(&buf, thumb, options); err != nil {
 		return fmt.Errorf("failed to encode thumbnail to webp: %w", err)
 	}

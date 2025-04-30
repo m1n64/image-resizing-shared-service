@@ -5,6 +5,7 @@ import (
 	"image-resizing-shared/internal/app"
 	db2 "image-resizing-shared/internal/infrastructure/db"
 	"image-resizing-shared/internal/ports"
+	"image-resizing-shared/pkg/config"
 	"image-resizing-shared/pkg/utils"
 	"log"
 	"os"
@@ -19,6 +20,7 @@ const (
 type Dependencies struct {
 	DB         *gorm.DB
 	UploadsDir string
+	Config     *config.Config
 	// Repositories
 	ImageRepository     ports.ImageRepository
 	ThumbnailRepository ports.ThumbnailRepository
@@ -27,8 +29,8 @@ type Dependencies struct {
 	ImageService  ports.ImageUseCase
 }
 
-func InitDependencies() *Dependencies {
-	_, uploadsDir, dbFile := initFS()
+func InitDependencies(config *config.Config) *Dependencies {
+	_, uploadsDir, dbFile := initFS(config)
 
 	db := utils.InitDB(dbFile)
 	utils.AutoMigrate(db)
@@ -38,12 +40,13 @@ func InitDependencies() *Dependencies {
 	thumbnailRepository := db2.NewThumbnailRepository(db)
 
 	// UseCases
-	resizeService := app.NewResizeService(db, thumbnailRepository, imageRepository, uploadsDir)
-	imageService := app.NewImageService(db, imageRepository, thumbnailRepository, resizeService, uploadsDir)
+	resizeService := app.NewResizeService(db, thumbnailRepository, imageRepository, uploadsDir, &config.Compression)
+	imageService := app.NewImageService(db, imageRepository, thumbnailRepository, resizeService, uploadsDir, &config.Compression)
 
 	return &Dependencies{
 		DB:                  db,
 		UploadsDir:          uploadsDir,
+		Config:              config,
 		ImageRepository:     imageRepository,
 		ThumbnailRepository: thumbnailRepository,
 		ResizeService:       resizeService,
@@ -51,8 +54,8 @@ func InitDependencies() *Dependencies {
 	}
 }
 
-func initFS() (string, string, string) {
-	dbPath := os.Getenv("DB_PATH")
+func initFS(config *config.Config) (string, string, string) {
+	dbPath := config.DBPath
 	if dbPath == "" {
 		dbPath = utils.GetDataPath(DbFile)
 	}

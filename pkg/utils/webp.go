@@ -13,7 +13,7 @@ import (
 	"os"
 )
 
-func ConvertToWebp(filePath string) (string, error) {
+func ConvertToWebp(filePath string, lossless bool, quality float32) (string, error) {
 	originalFile, err := os.Open(filePath)
 	if err != nil {
 		return "", fmt.Errorf("failed to open original file: %w", err)
@@ -25,10 +25,10 @@ func ConvertToWebp(filePath string) (string, error) {
 		return "", fmt.Errorf("failed to read original file: %w", err)
 	}
 
-	return ConvertBytesToWebp(fileBytes)
+	return ConvertBytesToWebp(fileBytes, lossless, quality)
 }
 
-func ConvertBytesToWebp(file []byte) (string, error) {
+func ConvertBytesToWebp(file []byte, lossless bool, quality float32) (string, error) {
 	img, format, err := image.Decode(bytes.NewReader(file))
 	if err != nil {
 		return "", fmt.Errorf("failed to decode image: %w", err)
@@ -52,8 +52,8 @@ func ConvertBytesToWebp(file []byte) (string, error) {
 	defer webpTempFile.Close()
 
 	options := &webp.Options{
-		Lossless: false,
-		Quality:  80,
+		Lossless: lossless,
+		Quality:  quality,
 	}
 
 	if err := webp.Encode(webpTempFile, img, options); err != nil {

@@ -10,6 +10,12 @@
 ./imageresizer
 ```
 
+You can also pass a custom config file (must be located next to the binary):
+
+```bash
+./imageresizer -c config.json
+```
+
 This will start:
 
 - REST API server on `http://localhost:5689`
@@ -44,6 +50,38 @@ You can run it in the background or as a system service.
 - **SQLite in WAL mode** - file-based database in WAL mode for performance
 - **imaging/chai2010/webp** — image processing and compression
 - **Makefile** — CLI tasks and automation
+
+---
+
+## 📚 Config File Format
+
+You can provide a JSON config file using `-c config.json`. This file must be located next to the binary.
+
+```json
+{
+  "web_server_port": "5689",
+  "grpc_server_port": "50066",
+  "rest_upload_token": "",
+  "grpc_token": "",
+  "db_path": "",
+  "image_compression": {
+    "lossless": false,
+    "quality": 80
+  }
+}
+```
+
+| Field                        | Type   | Description                                   |
+|------------------------------|--------|-----------------------------------------------|
+| `web_server_port`            | string | REST API port override                        |
+| `grpc_server_port`           | string | gRPC server port override                     |
+| `rest_upload_token`          | string | Optional API token for REST image upload auth |
+| `grpc_token`                 | string | Optional API token for gRPC access            |
+| `db_path`                    | string | Path to SQLite DB file (relative or absolute) |
+| `image_compression.lossless` | bool   | Whether to use lossless WebP compression      |
+| `image_compression.quality`  | number | WebP quality (0–100) if not lossless          |
+
+If the file is missing or partial, missing values are filled from ENV vars or defaults.
 
 ---
 
@@ -229,6 +267,17 @@ docker build -f Dockerfile.build -t imageresizer-builder .
 docker run --rm -v "$PWD/tmp:/out" imageresizer-builder cp /app/imageresizer /out/
 ```
 
+Or use
+```bash
+docker build -t m1n64/imageresizer:latest .
+```
+```bash
+docker run \
+  -p 5689:5689 \
+  -p 50066:50066 \
+  -v "$(pwd)/data:/app/data" \
+  m1n64/imageresizer
+```
 **Note! This solution is not tested by the author!**
 
 ---
@@ -244,6 +293,35 @@ docker run --rm -v "$PWD/tmp:/out" imageresizer-builder cp /app/imageresizer /ou
 | `make debug` | Run under Delve debugger (headless on port 2345) |
 | `make clean` | Remove the `./tmp` directory                     |
 | `make proto` | Compile `.proto` definitions with `protoc`       |
+
+---
+
+## 🐳 Running from Docker Hub
+
+You can use the prebuilt image directly in your Docker Compose setup:
+
+```yaml
+version: '3.9'
+
+services:
+  imageresizer:
+    image: m1n64/imageresizer:latest
+    ports:
+      - "5689:5689"
+      - "50066:50066"
+    volumes:
+      - imageresizer_data:/app/data
+      # - ./config/imageresizer.json:/app/config.json
+    # command: imageresizer -c config.json
+    environment:
+      - WEB_SERVER_PORT=5689
+      - GRPC_SERVER_PORT=50066
+```
+
+This setup:
+- Runs the latest Docker Hub image
+- Binds REST and gRPC ports
+- Mounts the host `./data` folder to persist uploaded files and the SQLite DB
 
 ---
 

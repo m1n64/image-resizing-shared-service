@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"image-resizing-shared/internal/domain"
 	"image-resizing-shared/internal/ports"
+	"image-resizing-shared/pkg/config"
 	"image-resizing-shared/pkg/utils"
 	"log"
 	"os"
@@ -19,6 +20,7 @@ type ImageService struct {
 	thumbnailRepository ports.ThumbnailRepository
 	resizeService       ports.ResizeUseCase
 	storageRoot         string
+	compressionSettings *config.CompressionSettings
 }
 
 func NewImageService(
@@ -27,6 +29,7 @@ func NewImageService(
 	thumbRepo ports.ThumbnailRepository,
 	resizeService ports.ResizeUseCase,
 	storageRoot string,
+	compressionSettings *config.CompressionSettings,
 ) ports.ImageUseCase {
 	return &ImageService{
 		db:                  db,
@@ -34,6 +37,7 @@ func NewImageService(
 		thumbnailRepository: thumbRepo,
 		resizeService:       resizeService,
 		storageRoot:         storageRoot,
+		compressionSettings: compressionSettings,
 	}
 }
 
@@ -95,7 +99,7 @@ func (s *ImageService) compressAndDispatch(ctx context.Context, id uuid.UUID, or
 		return
 	}
 
-	webpPath, err := utils.ConvertBytesToWebp(originalFile)
+	webpPath, err := utils.ConvertBytesToWebp(originalFile, s.compressionSettings.Lossless, s.compressionSettings.Quality)
 	if err != nil {
 		s.markAsError(ctx, id, fmt.Errorf("failed to convert to webp: %w", err))
 		return

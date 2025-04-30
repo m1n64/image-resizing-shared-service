@@ -105,7 +105,7 @@ func SaveTempFile(file io.Reader) (string, string, error) {
 
 	reader := io.MultiReader(bytes.NewReader(buf[:n]), file)
 
-	tempFile, err := os.CreateTemp("tmp", "upload-*"+ext)
+	tempFile, err := os.CreateTemp(os.TempDir(), "upload-*"+ext)
 	if err != nil {
 		return "", "", err
 	}

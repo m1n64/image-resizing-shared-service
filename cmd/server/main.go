@@ -12,6 +12,7 @@ import (
 	"image-resizing-shared/internal/delivery/grpc/handlers"
 	images "image-resizing-shared/internal/delivery/grpc/pb"
 	"image-resizing-shared/internal/delivery/rest"
+	"image-resizing-shared/pkg/config"
 	"image-resizing-shared/pkg/di"
 	"log"
 	"net"
@@ -23,15 +24,15 @@ var dependencies *di.Dependencies
 var GinMode string
 
 func init() {
-	dependencies = di.InitDependencies()
+	configPath := resolveConfigPath()
+
+	configuration := config.LoadConfig(configPath)
+	dependencies = di.InitDependencies(configuration)
 }
 
 func main() {
 	go func() {
-		serverPort := os.Getenv("WEB_SERVER_PORT")
-		if serverPort == "" {
-			serverPort = "5689"
-		}
+		serverPort := dependencies.Config.WebServerPort
 
 		fmt.Println("Web server started on port", serverPort, "...")
 
@@ -50,10 +51,7 @@ func main() {
 	}()
 
 	go func() {
-		grpcPort := os.Getenv("GRPC_SERVER_PORT")
-		if grpcPort == "" {
-			grpcPort = "50066"
-		}
+		grpcPort := dependencies.Config.GrpcServerPort
 
 		fmt.Println("gRPC server started on port", grpcPort, "...")
 
@@ -62,7 +60,7 @@ func main() {
 			log.Fatalf("failed to listen %v", err)
 		}
 
-		grpcToken := os.Getenv("GRPC_TOKEN")
+		grpcToken := dependencies.Config.GrpcToken
 
 		var grpcServer *grpc.Server
 		if grpcToken != "" {
@@ -102,4 +100,24 @@ func tokenAuthInterceptor(token string) grpc.UnaryServerInterceptor {
 
 		return handler(ctx, req)
 	}
+}
+
+func resolveConfigPath() string {
+	args := os.Args
+	newArgs := []string{args[0]}
+	var configPath string
+
+	for i := 1; i < len(args); i++ {
+		if args[i] == "--config" || args[i] == "-c" {
+			if i+1 < len(args) {
+				configPath = args[i+1]
+				i++
+				continue
+			}
+		}
+		newArgs = append(newArgs, args[i])
+	}
+
+	os.Args = newArgs
+	return configPath
 }
