@@ -1,0 +1,19 @@
+package ports
+
+import (
+	"context"
+	"image-resizing-shared/internal/domain"
+)
+
+type UploadResult struct {
+	ID          string
+	OriginalKey string
+	Status      string
+	MIME        string
+	Size        int64
+}
+
+type ImageUseCase interface {
+	UploadOriginal(ctx context.Context, filePath string, contentType string) (*UploadResult, error)
+	FindByID(ctx context.Context, id string) (*domain.Image, error)
+}

@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package images;
+
+option go_package = "./internal/delivery/grpc/pb;images";
+
+service ImageService {
+  rpc UploadImage(UploadImageRequest) returns (ImageResponse) {}
+  rpc GetImage(GetImageRequest) returns (ImageResponse) {}
+}
+
+message UploadImageRequest {
+  bytes data = 1;
+}
+
+message GetImageRequest {
+  string id = 1;
+}
+
+message ThumbnailShort {
+  string size = 1;
+  string url = 2;
+  string type = 3;
+}
+
+message ImageResponse {
+  string id = 1;
+  string original_url = 2;
+  optional string compressed_url = 3;
+  string status = 4;
+  int64 size = 5;
+  string mime = 6;
+  optional string error_message = 7;
+  repeated ThumbnailShort thumbnails = 8;
+}

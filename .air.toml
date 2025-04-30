@@ -1,0 +1,22 @@
+[build]
+cmd = "go build -gcflags='all=-N -l' -o ./tmp/imageresizer ./cmd/server/main.go"
+bin = "dlv"
+full_bin= "dlv exec ./tmp/main --continue --listen=:2345 --api-version=2 --log=true --headless=true --accept-multiclient"
+watch_dir = ["cmd", "internal", "pkg"]
+include_ext = ["go", "tpl", "tmpl", "html"]
+exclude_dir = ["tmp", "vendor", "storage"]
+
+[log]
+time = true
+
+[color]
+main = "yellow"
+watcher = "cyan"
+build = "green"
+runner = "magenta"
+
+[watch]
+include = ["./*"]
+exclude = []
+exclude_file = [".DS_Store", ".git/*", "tmp/*", "*.test", "*.md"]
+interval = "100ms"
