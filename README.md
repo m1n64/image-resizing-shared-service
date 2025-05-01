@@ -328,6 +328,7 @@ This setup:
 ## 🧩 Available SDK
 
 - [PHP](https://github.com/m1n64/image-resizer-sdk) - A Lightweight PHP SDK for the Image Resizer Service
+- [PHP (Laravel)](https://github.com/junior-idiot/laravel-imageresizer-sdk) - A Laravel wrapper for PHP SDK
 
 ---
 
